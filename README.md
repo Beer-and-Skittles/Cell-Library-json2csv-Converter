@@ -29,3 +29,6 @@ optional arguments:
     --csvdir   CSVDIR   directory path to output csv file(s)
     --display  DISPLAY  \'ON\': display on, all else: display off
 ```
+
+## Reference
+* https://github.com/mirkat1206/liberty2json-python
