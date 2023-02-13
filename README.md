@@ -32,3 +32,4 @@ optional arguments:
 
 ## Reference
 * https://github.com/mirkat1206/liberty2json-python
+* https://github.com/Beer-and-Skittles/Cell-Corner-Characterization-DNN-Model
