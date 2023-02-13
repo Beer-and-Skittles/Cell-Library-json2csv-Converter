@@ -1,6 +1,6 @@
 # json2csv
 
-The goal of this Python project is to extract process, voltage, temperature, and timing information from cell libraries in .json format, and write it to a .csv file.
+This project is a pre-work for cell characterization. For DNN model, see repo ```Cell-Corner-Characterization-DNN-Model```(https://github.com/Beer-and-Skittles/Cell-Corner-Characterization-DNN-Model). The objective is to extract process, voltage, temperature and timing information from cell libraries in .json format and write it to a .csv file. 
 
 Namely, and strictly:
 * 'nom_voltage',
