@@ -3,7 +3,8 @@ import csv
 import json
 
 lib_info_keys = ['nom_voltage', 'nom_temperature', 'nom_process']
-timing_info_keys = ['related_pin', 'timing_type', 'timing_sense']
+timing_info_keys = ['related_pin']
+timing_info_excl = ['timing_type', 'timing_sense']
 
 class json2csv():
 
@@ -49,50 +50,67 @@ class json2csv():
 
         filenames = next(os.walk(filepath), (None, None, []))[2]
         for filename in filenames:
+
+            # open liberty file
             with open(filepath+filename) as libfile:
                 data = json.load(libfile)
 
+            # extract cell content and filename
             name = [*data['library'].keys()][0]
             content = data['library'][name]['cell']
-                
-
             cell_content = data['library'][name]['cell'][self.cell]
             if 'pin' not in cell_content.keys():
                 return []
 
+            # extract all pins in the cell
             pins = [*cell_content['pin'].keys()]
-
+        
+            # append library features into lib_info: nom_voltage, nom_temperature, nom_process
             lib_info = []
             for key in lib_info_keys:
                 lib_info.append(data['library'][name][key])
             
 
-            # pins
             for pin in pins:
+
+                # for each pin in the specific cell, extract pin information
                 pin_content = cell_content['pin'][pin]
             
                 if 'timing' in [*pin_content.keys()]:
-                    
-                    # to adapt both listed and single-entried timings
+
+                    # extract timing contant; should adapt both listed and single-entried timing formats
                     if type(pin_content['timing']) == type([]):
                         timing_contents = pin_content['timing']
                     else:
                         timing_contents = [pin_content['timing']]
                     
-                    # complete header if had not
+                    '''
+                    adding the feature titles to the header list
+                    all keys in the 'timing' section will be added except those 
+                    listed in the exclude list: timing_info_excl
+                    '''
+                    # append listed features to header-list if the header-list is still empty
                     if not self.header_completed: 
                         self.header += lib_info_keys
 
                         timing_header = [[] for i in range(len(timing_info_keys))]
                         arch_types = []
+
+                        # loop takes the first half of timing_contents because it repeats itself once
                         for timing_content in timing_contents[int(len(timing_contents)/2):]:
                             for key, value in timing_content.items():
+
+                                # if the feature is selected as timing_info_key, add to header_nam
                                 if key in timing_info_keys:
                                     header_name = key+' '+value
                                     header_idx  = timing_info_keys.index(key)
+
+                                    # add header_name to the timing_header list if it is not yet in 
                                     if header_name not in timing_header[header_idx]:
                                         timing_header[header_idx].append(header_name)
-                                else:
+                                
+                                # if the feature is not excluded, it is an arch-type expression
+                                elif key not in timing_info_excl:
                                     if key not in arch_types:
                                         arch_types.append(key)
                         for th in timing_header:
@@ -102,11 +120,12 @@ class json2csv():
                         self.header += ['output_load', 'input_slope', 'value']
                         self.header_completed = True
 
-                    # timing
+                    '''
+                    extracting features and putting each row into the csv_rows list
+                    '''
                     for timing_content in timing_contents[int(len(timing_contents)/2):]:
                         pin_csv_row = lib_info + [0 for i in range(len(self.header) - len(lib_info))]
                         for key, value in timing_content.items():
-                            
                             if key in timing_info_keys:
                                 pin_csv_row[self.header.index(key+' '+value)] = 1
 
