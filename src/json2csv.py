@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+from augData import *
 
 lib_info_keys = ['nom_voltage', 'nom_temperature', 'nom_process']
 timing_info_keys = ['related_pin']
@@ -50,6 +51,7 @@ class json2csv():
 
         filenames = next(os.walk(filepath), (None, None, []))[2]
         for filename in filenames:
+            print(filename)
 
             # open liberty file
             with open(filepath+filename) as libfile:
@@ -155,7 +157,7 @@ class json2csv():
             print()
 
     # parse timing arch
-    def parse_timing_arch(self, list, arch_type, value):
+    def parse_timing_arch(self, ilist, arch_type, value):
 
         content = value[[*value.keys()][0]]
         if 'index_1' not in content.keys() or 'index_2' not in content.keys() or 'values' not in content.keys():
@@ -165,14 +167,30 @@ class json2csv():
         input_slopes = content['index_2'].split(', ')
         values = content['values'].split(', ')
         
+        new_matrix = augment(self.toFloatList(values), self.toFloatList(output_loads), self.toFloatList(input_slopes))
+
         return_list = []
-        for i in range(len(output_loads)):
-            for j in range(len(input_slopes)):
-                val_list = list.copy()
-                val_list[arch_type] = 1
-                val_list[-1] = values[i*7+j]
-                val_list[-2] = input_slopes[i]
-                val_list[-3] = output_loads[j]
-                return_list.append(val_list)
+        for val in new_matrix:
+            val_list = ilist.copy()
+            val_list[arch_type] = 1
+            val_list[-1] = val[0]
+            val_list[-2] = val[1]
+            val_list[-3] = val[2]
+            return_list.append(val_list)
+        # for i in range(len(output_loads)):
+        #     for j in range(len(input_slopes)):
+        #         val_list = ilist.copy()
+        #         val_list[arch_type] = 1
+        #         val_list[-1] = values[i*7+j]
+        #         val_list[-2] = input_slopes[i]
+        #         val_list[-3] = output_loads[j]
+        #         return_list.append(val_list)
         return return_list
+
+    # convert list of strings to list of floats
+    def toFloatList(self, ilist):
+        o_list = []
+        for val in ilist:
+            o_list.append(float(val))
+        return o_list
 
