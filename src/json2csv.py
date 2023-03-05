@@ -136,7 +136,8 @@ class json2csv():
                                 if csv_row == []:
                                     return []
                                 self.csv_rows += csv_row
-                    break 
+                                
+                        
     
     # write collected information stored in csv_rows into csv file
     def write_csv(self, filepath):
