@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class augData:
 
@@ -18,7 +19,7 @@ class augData:
             self.augArr(self.opl)
             self.augArr(self.ins)
             self.augMat(self.val)
-            print(len(self.opl), len(self.ins), len(self.val))
+            # print(len(self.opl), len(self.ins), len(self.val))
 
     def augArr(self, arr):
         ptr = 0
@@ -40,6 +41,22 @@ class augData:
         
         return mat
 
+    def plot(self):
+        plt.style.use('_mpl-gallery')
+
+        X, Y, Z = [], [], []
+        for i_opl in range(len(self.val)):
+            for i_ins in range(len(self.val[i_opl])):
+                X.append(self.opl[i_opl])
+                Y.append(self.ins[i_ins])
+                Z.append(self.val[i_opl][i_ins])
+        
+        fig, ax = plt.subplots(subplot_kw = {"projection": "3d"})
+        ax.scatter(X,Y,Z)
+
+        plt.show()
+
+
 def test():
     a0 = [0.016, 0.032, 0.064, 0.128, 0.256, 0.512, 1.024]
     b0 = [0.1, 0.25, 0.5, 1, 2, 4, 8]
@@ -57,8 +74,11 @@ def test():
           [16,20,24,28],\
           [32,36,40,44],]
 
-    testClass = augData(v1, a1, b1)
+    testClass = augData(v0, a0, b0)
+    testClass.plot()
     testClass.augBy(5)
+    testClass.plot()
+
 
 
 test()
