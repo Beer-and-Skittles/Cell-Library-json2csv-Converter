@@ -1,7 +1,7 @@
 import os
 import csv
 import json
-from augData import *
+from augData import augData
 
 lib_info_keys = ['nom_voltage', 'nom_temperature', 'nom_process']
 timing_info_keys = ['related_pin']
@@ -9,7 +9,7 @@ timing_info_excl = ['timing_type', 'timing_sense']
 
 class json2csv():
 
-    def __init__(self, cell, input_path, output_path, display):
+    def __init__(self, cell, input_path, output_path, display, iterations):
 
         if input_path != '' and os.path.exists(input_path) == False:
             raise AssertionError(f'Error: input path {input_path} does not exist')
@@ -19,6 +19,7 @@ class json2csv():
         self.display = display
         self.input_path = input_path
         self.output_path = output_path
+        self.iterations = iterations
 
         if cell == 'ALL':
             all_cells = self.search_cells(input_path)
@@ -144,10 +145,11 @@ class json2csv():
         # self.csv_rows is empty : ANTENNA_RVT, BUSKP_RVT
         # 'pin' key DNE: DCAP_RVT, ...
         if self.csv_rows != []:
-            csvfile = open(filepath + self.cell+'.csv', 'w', newline='')
+            csvfile = open(filepath + self.cell+str(self.iterations)+'.csv', 'w', newline='')
             writer = csv.writer(csvfile)
             writer.writerow(self.header)
             for row in self.csv_rows:
+                # print('asd')
                 writer.writerow(row)
             csvfile.close()
             if self.display:
@@ -156,6 +158,15 @@ class json2csv():
         elif self.display:
             print('FAIL')
             print()
+
+    # split 1d-list val_buf to m by n matrix values
+    def split_values(self, val_buf, n):
+        values = []
+        start = 0
+        while start+1 < len(val_buf):
+            values.append(val_buf[start:start+n])
+            start += n
+        return values
 
     # parse timing arch
     def parse_timing_arch(self, ilist, arch_type, value):
@@ -166,26 +177,21 @@ class json2csv():
 
         output_loads = content['index_1'].split(', ')
         input_slopes = content['index_2'].split(', ')
-        values = content['values'].split(', ')
-        
-        new_matrix = augment(self.toFloatList(values), self.toFloatList(output_loads), self.toFloatList(input_slopes))
+        value_buf = content['values'].split(', ')
+        values = self.split_values(value_buf, len(input_slopes))
+
+        augmenter = augData(output_loads, input_slopes, values)
+        output_loads, input_slopes, values = augmenter.augBy(self.iterations)
 
         return_list = []
-        for val in new_matrix:
-            val_list = ilist.copy()
-            val_list[arch_type] = 1
-            val_list[-1] = val[0]
-            val_list[-2] = val[1]
-            val_list[-3] = val[2]
-            return_list.append(val_list)
-        # for i in range(len(output_loads)):
-        #     for j in range(len(input_slopes)):
-        #         val_list = ilist.copy()
-        #         val_list[arch_type] = 1
-        #         val_list[-1] = values[i*7+j]
-        #         val_list[-2] = input_slopes[i]
-        #         val_list[-3] = output_loads[j]
-        #         return_list.append(val_list)
+        for i in range(len(output_loads)):
+            for j in range(len(input_slopes)):
+                val_list = ilist.copy()
+                val_list[arch_type] = 1
+                val_list[-1] = values[i][j]
+                val_list[-2] = output_loads[i]
+                val_list[-3] = input_slopes[j]
+                return_list.append(val_list)
         return return_list
 
     # convert list of strings to list of floats
@@ -194,4 +200,6 @@ class json2csv():
         for val in ilist:
             o_list.append(float(val))
         return o_list
+
+
 

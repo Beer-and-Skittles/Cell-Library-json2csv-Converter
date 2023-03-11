@@ -3,25 +3,35 @@ import matplotlib.pyplot as plt
 
 class augData:
 
-    def __init__(self, values, output_loads, input_slopes):
-
+    def __init__(self, output_loads, input_slopes, values):
+        # print(values)
         assert len(values) == len(output_loads)
         assert len(values[0]) == len(input_slopes)
         assert len(output_loads) >= 2
         assert len(input_slopes) >= 2
 
-        self.val = values
-        self.opl = output_loads
-        self.ins = input_slopes
+        self.val = np.array(values).astype(np.float).tolist()
+        self.opl = np.array(output_loads).astype(np.float).tolist()
+        self.ins = np.array(input_slopes).astype(np.float).tolist()
     
     def augBy(self, n):
+        '''
+        returns data augmented by n interations;
+        if n == 0, returns original data
+        '''
+        opl, ins, val = self.opl[:], self.ins[:], self.val[:]
         for i in range(n):
-            self.augArr(self.opl)
-            self.augArr(self.ins)
-            self.augMat(self.val)
-            # print(len(self.opl), len(self.ins), len(self.val))
+            self.augArr(opl)
+            self.augArr(ins)
+            self.augMat(val)
+        
+        return opl, ins, val
 
     def augArr(self, arr):
+        '''
+        augments list by inserting mean vals between entries
+        len(n) => len(2*n-1)
+        '''
         ptr = 0
         while ptr+1 < len(arr):
             avg = (arr[ptr]+arr[ptr+1])/2.0
@@ -30,6 +40,12 @@ class augData:
         return arr
 
     def augMat(self, mat):
+        '''
+        augments matrix by 
+            (1) inserting mean rows between rows
+            (2) inserting mean vals between entries in each rows
+        shape(n by m) => shape(n*2-1 by m*2-1)
+        '''
         ptr = 0
         while ptr+1 < len(mat):
             avg = ((np.asarray(mat[ptr])+np.asarray(mat[ptr+1])) / 2.0).tolist()
@@ -41,15 +57,17 @@ class augData:
         
         return mat
 
-    def plot(self):
+    def plot(self, arr1, arr2, mat):
+        '''
+        plots given data into a 3d plot by matplotlib
+        '''
         plt.style.use('_mpl-gallery')
-
         X, Y, Z = [], [], []
-        for i_opl in range(len(self.val)):
-            for i_ins in range(len(self.val[i_opl])):
-                X.append(self.opl[i_opl])
-                Y.append(self.ins[i_ins])
-                Z.append(self.val[i_opl][i_ins])
+        for i1 in range(len(mat)):
+            for i2 in range(len(mat[i1])):
+                X.append(arr1[i1])
+                Y.append(arr2[i2])
+                Z.append(mat[i1][i2])
         
         fig, ax = plt.subplots(subplot_kw = {"projection": "3d"})
         ax.scatter(X,Y,Z)
@@ -74,12 +92,11 @@ def test():
           [16,20,24,28],\
           [32,36,40,44],]
 
-    testClass = augData(v0, a0, b0)
-    testClass.plot()
-    testClass.augBy(5)
-    testClass.plot()
+    testClass = augData(a0, b0, v0)
+    A, B, V = testClass.augBy(5)
+    print(len(A), len(B), len(V), len(V[0]))
 
 
 
-test()
+# test()
 
