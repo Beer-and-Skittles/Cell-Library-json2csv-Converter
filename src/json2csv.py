@@ -145,12 +145,14 @@ class json2csv():
         # self.csv_rows is empty : ANTENNA_RVT, BUSKP_RVT
         # 'pin' key DNE: DCAP_RVT, ...
         if self.csv_rows != []:
-            csvfile = open(filepath + self.cell+str(self.iterations)+'.csv', 'w', newline='')
+            csvfile = open(filepath + self.cell+str(self.iterations)+'_transitions'+'.csv', 'w', newline='')
             writer = csv.writer(csvfile)
             writer.writerow(self.header)
             for row in self.csv_rows:
-                # print('asd')
-                writer.writerow(row)
+
+                ''' write only when 5:cell_rise/6:rise_transition/7:cell_fall/8:fall_transition'''
+                if row[6] == 1 or row[8] == 1:
+                    writer.writerow(row)
             csvfile.close()
             if self.display:
                 print('success')
